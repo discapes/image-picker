@@ -20,7 +20,9 @@ app.use(cors);
 app.get('/pics', async (req, res) => {
     const pics = (await globby([
         'data/pics/*.png',
-        'data/pics/*.jpg'
+        'data/pics/*.PNG',
+        'data/pics/*.jpg',
+        'data/pics/*.JPG'
     ]))
         .sort()
         .map(fullpath => path.basename(fullpath));
