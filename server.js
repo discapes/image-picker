@@ -1,30 +1,55 @@
-import { createRequire } from "module";
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { globby } from 'globby';
+
 const require = createRequire(import.meta.url);
-import {globby} from 'globby';
 const express = require('express');
+const fs = require('fs/promises');
+const path = require('path');
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const port = 3000;
 
-app.use((req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Expose-Headers', '*');
-    next();
+
+let port = 3000
+let rootdir = path.join(__dirname, 'data/');
+app.use(cors);
+
+
+
+app.get('/pics', async (req, res) => {
+    const pics = (await globby([
+        'data/pics/*.png',
+        'data/pics/*.jpg'
+    ]))
+        .sort()
+        .map(fullpath => path.basename(fullpath));
+    res.json(pics);
 });
 
-const paths = await globby(["pics/*.png", "pics/*.jpg"]);  
+app.get('/move', async (req, res) => {
+    let oldpath = path.join(rootdir, req.query.olddir, req.query.filename);
+    let newpath = path.join(rootdir, req.query.newdir, req.query.filename);
+    if (oldpath.indexOf(rootdir) !== 0 || newpath.indexOf(rootdir) !== 0) return res.sendStatus(404);
+    console.log(`Renaming ${oldpath} to ${newpath}`);
 
-app.get('/:index', async (req, res) => {
-    let index = Math.max(0, req.params.index);
-    index = Math.min(paths.length - 1, index);
-    let fname = paths[index];
-    res.set('index', index);
-    res.sendFile(fname, { root: __dirname });
+    await fs.rename(oldpath, newpath);
+    res.sendStatus(200);
 });
+
+app.get('/get', async (req, res) => {
+    let filename = req.query.filename;
+    let filepath = path.join(rootdir, 'pics', filename);
+    if (filepath.indexOf(rootdir) !== 0) throw new Error("Invalid filename");
+    res.sendFile(filepath);
+});
+
+
 
 app.listen(port, () => console.log(`Server listening on port ${port}`))
 
+function cors(req, res, next) {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Expose-Headers', '*');
+    next();
+}

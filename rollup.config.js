@@ -52,6 +52,13 @@ export default {
 					],
 				},
 			}),
+			onwarn: (warning, handler) => {
+				// e.g. don't warn on a11y-autofocus
+				if (warning.code.toLowerCase().includes('a11y')) return;
+		
+				// let Rollup handle all other warnings normally
+				handler(warning)
+			  }
 		}),
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
