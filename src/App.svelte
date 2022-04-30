@@ -1,10 +1,11 @@
 <script>
-	import { onMount } from "svelte";
-	const SERVER = "http://127.0.0.1:3000";
+	import { url } from "./util.js";
+	import Preview from "./Preview.svelte";
 
 	let pics;
 	let index = 0;
 	let pic;
+	let preview;
 
 	fetch(url("pics"))
 		.then((res) => res.json())
@@ -13,19 +14,22 @@
 
 	$: {
 		if (pics) {
-			index = Math.max(0, Math.min(index, pics.length - 1));
-			pic = pics[index];
+			index = index % (pics.length - 1);
+			pic = pics.at(index);
+
+			preview = [];
+			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i));
 		}
 	}
 
-	async function move(dir) {
-		let pic = pics.splice(index, 1);
+	async function move(olddir, newdir) {
+		let filename = pics.splice(index, 1);
 		pics = pics;
 		await fetch(
 			url("move", {
-				olddir: "pics",
-				newdir: dir,
-				filename: pic,
+				olddir,
+				newdir,
+				filename,
 			})
 		);
 	}
@@ -36,30 +40,30 @@
 			case "ArrowRight":
 				return index++;
 			case "ArrowUp":
-				return move("delete");
+				return move("pics", "delete");
 			case "ArrowDown":
-				return move("keep");
+				return move("pics", "keep");
 		}
-	}
-	function url(path, params = {}) {
-		return SERVER + "/" + path + "?" + new URLSearchParams(params).toString();
 	}
 </script>
 
 <svelte:window on:keydown={handleKd} />
 {#if pic}
-	<div class="inline-grid">
-		<button class="buttonfx textcontainer col-span-3" on:click={() => move("delete")}>Trash</button>
+	<div class="flex">
+		<div class="block flex-col">
+			<Preview images={preview} />
+			<div class="text-center text-2xl m-3">{pic}</div>
+		</div>
+		<div class="grid">
+			<button class="buttonfx textcontainer col-span-3" on:click={() => move("pics", "delete")}>Trash</button>
 
-		<button on:click={() => index--} class="buttonfx textcontainer col-span-1">Left</button>
-		<img class="h-[800px] col-span-1" src={url("get", { filename: pic })} />
-		<!-- TODO MAKE IMAGE UPDATE -->
-		<button class="buttonfx textcontainer col-span-1" on:click={() => index++}>Right</button>
+			<button on:click={() => index--} class="buttonfx textcontainer col-span-1">Left</button>
+			<img class="h-[90vh] w-full col-span-1" src={url("get", { filename: pic })} />
+			<!-- TODO MAKE IMAGE UPDATE -->
+			<button class="buttonfx textcontainer col-span-1" on:click={() => index++}>Right</button>
 
-		<button class="buttonfx textcontainer col-span-3" on:click={() => move("keep")}>Keep</button>
-	</div>
-	<div>
-		{pic}
+			<button class="buttonfx textcontainer col-span-3" on:click={() => move("pics", "keep")}>Keep</button>
+		</div>
 	</div>
 {:else}
 	Searching for pictures...
