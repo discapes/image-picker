@@ -6,6 +6,7 @@
 	let index = 0;
 	let pic;
 	let preview;
+	let zoom = 90;
 
 	fetch(url("pics"))
 		.then((res) => res.json())
@@ -19,6 +20,7 @@
 
 			preview = [];
 			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i));
+			preview.length = Math.min(pics.length, 5);
 		}
 	}
 
@@ -43,6 +45,10 @@
 				return move("pics", "delete");
 			case "ArrowDown":
 				return move("pics", "keep");
+			case "+":
+				return zoom++;
+			case "-":
+				return zoom--;
 		}
 	}
 </script>
@@ -50,15 +56,19 @@
 <svelte:window on:keydown={handleKd} />
 {#if pic}
 	<div class="flex">
-		<div class="block flex-col">
+		<div class="flex flex-col items-center justify-center">
 			<Preview images={preview} />
 			<div class="text-center text-2xl m-3">{pic}</div>
+			<div>
+				<button class="buttonfx textcontainer w-14 h-14" on:click={() => zoom++}>+</button>
+				<button class="buttonfx textcontainer w-14 h-14" on:click={() => zoom--}>-</button>
+			</div>
 		</div>
 		<div class="grid">
 			<button class="buttonfx textcontainer col-span-3" on:click={() => move("pics", "delete")}>Trash</button>
 
 			<button on:click={() => index--} class="buttonfx textcontainer col-span-1">Left</button>
-			<img class="h-[90vh] w-full col-span-1" src={url("get", { filename: pic })} />
+			<img style={`height:${zoom}vh;`} class="object-cover w-full col-span-1" src={url("get", { filename: pic })} />
 			<!-- TODO MAKE IMAGE UPDATE -->
 			<button class="buttonfx textcontainer col-span-1" on:click={() => index++}>Right</button>
 
