@@ -15,11 +15,11 @@
 
 	$: {
 		if (pics) {
-			index = index % (pics.length - 1);
+			index = index % (pics.length);
 			pic = pics.at(index);
 
 			preview = [];
-			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i));
+			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i % (pics.length)));
 			preview.length = Math.min(pics.length, 5);
 		}
 	}
@@ -55,7 +55,7 @@
 
 <svelte:window on:keydown={handleKd} />
 {#if pic}
-	<div class="flex">
+	<div class="flex py-[100px] justify-around">
 		<div class="flex flex-col items-center justify-center">
 			<Preview images={preview} />
 			<div class="text-center text-2xl m-3">{pic}</div>
@@ -68,7 +68,7 @@
 			<button class="buttonfx textcontainer col-span-3" on:click={() => move("pics", "delete")}>Trash</button>
 
 			<button on:click={() => index--} class="buttonfx textcontainer col-span-1">Left</button>
-			<img style={`height:${zoom}vh;`} class="object-cover w-full col-span-1" src={url("get", { filename: pic })} />
+			<img style={`height:${zoom*0.80}vh;`} class="object-cover w-full col-span-1" src={url("get", { filename: pic })} />
 			<!-- TODO MAKE IMAGE UPDATE -->
 			<button class="buttonfx textcontainer col-span-1" on:click={() => index++}>Right</button>
 
