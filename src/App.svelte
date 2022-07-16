@@ -8,18 +8,15 @@
 	let preview;
 	let zoom = 90;
 
-	fetch(url("pics"))
-		.then((res) => res.json())
-		.then((json) => (pics = json))
-		.catch((e) => console.log(e));
+	pics = ["cit2.png", "cit3.png", "cities.png", "sea.jpg", "wallpaper.jpg"];
 
 	$: {
 		if (pics) {
-			index = index % (pics.length);
+			index = index % pics.length;
 			pic = pics.at(index);
 
 			preview = [];
-			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i % (pics.length)));
+			for (let i = index - 2; i <= index + 2; i++) preview.push(pics.at(i % pics.length));
 			preview.length = Math.min(pics.length, 5);
 		}
 	}
@@ -27,13 +24,7 @@
 	async function move(olddir, newdir) {
 		let filename = pics.splice(index, 1);
 		pics = pics;
-		await fetch(
-			url("move", {
-				olddir,
-				newdir,
-				filename,
-			})
-		);
+		message("move " + filename + " from " + olddir + "/ to " + newdir + "/", 3);
 	}
 	function handleKd(e) {
 		switch (e.key) {
@@ -51,12 +42,25 @@
 				return zoom--;
 		}
 	}
+	function message(text, duration) {
+		let div = document.createElement("div");
+		div.innerText = text;
+		div.style.position = "fixed";
+		div.style.left = "200px";
+		div.style.top = "200px";
+		div.style.padding = "10px";
+		div.style.background = "white"
+		div.style.textAlign = "center";
+		div.style.animation = `fade-out ${duration}s`;
+		document.body.appendChild(div);
+		setTimeout(() => div.remove(), duration * 1000);
+	}
 </script>
 
 <svelte:window on:keydown={handleKd} />
 {#if pic}
-	<div class="flex py-[100px] justify-around">
-		<div class="flex flex-col items-center justify-center">
+	<div class="flex h-full items-center justify-around">
+		<div class="flex flex-col items-center justify-center px-10">
 			<Preview images={preview} />
 			<div class="text-center text-2xl m-3">{pic}</div>
 			<div>
@@ -68,7 +72,7 @@
 			<button class="buttonfx textcontainer col-span-3" on:click={() => move("pics", "delete")}>Trash</button>
 
 			<button on:click={() => index--} class="buttonfx textcontainer col-span-1">Left</button>
-			<img style={`height:${zoom*0.80}vh;`} class="object-cover w-full col-span-1" src={url("get", { filename: pic })} />
+			<img style={`height:${zoom * 0.8}vh;`} class="object-cover w-full col-span-1" src={url("get", { filename: pic })} />
 			<!-- TODO MAKE IMAGE UPDATE -->
 			<button class="buttonfx textcontainer col-span-1" on:click={() => index++}>Right</button>
 
